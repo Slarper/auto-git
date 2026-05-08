@@ -101,6 +101,15 @@ def commit() -> bool:
     return True
 
 
+def _authed_remote_url() -> str | None:
+    url = _git("remote", "get-url", GIT_REMOTE, check=False)
+    if not url:
+        return None
+    if url.startswith("https://") and GITHUB_PAT:
+        return url.replace("https://", f"https://{GITHUB_PAT}@", 1)
+    return url
+
+
 def pull():
     print("Pulling & merging ...")
     _git("pull", GIT_REMOTE)
@@ -108,16 +117,8 @@ def pull():
 
 
 def push():
-    url = _git("remote", "get-url", GIT_REMOTE)
-    if url.startswith("https://") and GITHUB_PAT:
-        authed = url.replace("https://", f"https://{GITHUB_PAT}@", 1)
-        _git("remote", "set-url", GIT_REMOTE, authed)
-        try:
-            _git("push", GIT_REMOTE)
-        finally:
-            _git("remote", "set-url", GIT_REMOTE, url)
-    else:
-        _git("push", GIT_REMOTE)
+    print("Pushing ...")
+    _git("push", GIT_REMOTE)
     print("Push done.")
 
 
@@ -128,9 +129,18 @@ def main():
 
     os.chdir(_git("rev-parse", "--show-toplevel"))
 
-    commit()
-    pull()
-    push()
+    authed = _authed_remote_url()
+    original = None
+    if authed:
+        original = _git("remote", "get-url", GIT_REMOTE)
+        _git("remote", "set-url", GIT_REMOTE, authed)
+    try:
+        commit()
+        pull()
+        push()
+    finally:
+        if original:
+            _git("remote", "set-url", GIT_REMOTE, original)
 
 
 if __name__ == "__main__":
