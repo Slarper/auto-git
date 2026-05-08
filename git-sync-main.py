@@ -78,7 +78,9 @@ def _generate_message(diff: str) -> str:
     )
     resp.raise_for_status()
     data = resp.json()
-    content = data["choices"][0]["message"]["content"]
+    content = data["choices"][0]["message"].get("content")
+    if content is None or not content.strip():
+        content = data["choices"][0]["message"].get("reasoning")
     if content is None or not content.strip():
         msg = "AI response content is empty. Check your model or API key."
         print(f"FATAL: {msg}", file=sys.stderr)
@@ -110,19 +112,15 @@ def _authed_remote_url() -> str | None:
     return url
 
 
-def _current_branch() -> str:
-    return _git("rev-parse", "--abbrev-ref", "HEAD")
-
-
 def pull():
     print("Pulling & merging ...")
-    _git("pull", GIT_REMOTE, _current_branch())
+    _git("pull", GIT_REMOTE)
     print("Pull done.")
 
 
 def push():
     print("Pushing ...")
-    _git("push", GIT_REMOTE, _current_branch())
+    _git("push", "-u", GIT_REMOTE, _git("rev-parse", "--abbrev-ref", "HEAD"))
     print("Push done.")
 
 
