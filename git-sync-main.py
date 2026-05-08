@@ -77,7 +77,13 @@ def _generate_message(diff: str) -> str:
         timeout=60,
     )
     resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    data = resp.json()
+    content = data["choices"][0]["message"]["content"]
+    if content is None or not content.strip():
+        msg = "AI response content is empty. Check your model or API key."
+        print(f"FATAL: {msg}", file=sys.stderr)
+        sys.exit(1)
+    return content.strip()
 
 
 def commit() -> bool:
@@ -122,9 +128,9 @@ def main():
 
     os.chdir(_git("rev-parse", "--show-toplevel"))
 
-    if commit():
-        pull()
-        push()
+    commit()
+    pull()
+    push()
 
 
 if __name__ == "__main__":
