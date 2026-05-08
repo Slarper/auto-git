@@ -80,8 +80,6 @@ def _generate_message(diff: str) -> str:
     data = resp.json()
     content = data["choices"][0]["message"].get("content")
     if content is None or not content.strip():
-        content = data["choices"][0]["message"].get("reasoning")
-    if content is None or not content.strip():
         msg = "AI response content is empty. Check your model or API key."
         print(f"FATAL: {msg}", file=sys.stderr)
         sys.exit(1)
