@@ -110,15 +110,19 @@ def _authed_remote_url() -> str | None:
     return url
 
 
+def _current_branch() -> str:
+    return _git("rev-parse", "--abbrev-ref", "HEAD")
+
+
 def pull():
     print("Pulling & merging ...")
-    _git("pull", GIT_REMOTE)
+    _git("pull", GIT_REMOTE, _current_branch())
     print("Pull done.")
 
 
 def push():
     print("Pushing ...")
-    _git("push", GIT_REMOTE)
+    _git("push", GIT_REMOTE, _current_branch())
     print("Push done.")
 
 
