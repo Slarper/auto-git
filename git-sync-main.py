@@ -114,8 +114,11 @@ def _authed_remote_url() -> str | None:
 
 def pull():
     print("Pulling & merging ...")
-    _git("pull", GIT_REMOTE)
-    print("Pull done.")
+    r = subprocess.run(["git", "pull", GIT_REMOTE], capture_output=True, text=True)
+    if r.returncode != 0:
+        print(f"  (skipped: {r.stderr.strip()})")
+    else:
+        print("Pull done.")
 
 
 def push():
